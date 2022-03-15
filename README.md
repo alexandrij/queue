@@ -12,27 +12,67 @@
 
 ![Очередь](https://upload.wikimedia.org/wikipedia/commons/5/52/Data_Queue.svg)
 
-## Пример
+## Пример синхронной очереди
 
 ```go
 package main
 
 import (
 	"fmt"
-	"github.com/alexandrij/queue"
+	squeue "github.com/alexandrij/queue/sync"
 )
 
 func main() {
-	q := queue.New()
+	q := squeue.New()
 	q.Enqueue(1)
 	q.Enqueue(2)
 	q.Enqueue(3)
 
-	for v := q.Dequeue(); v != nil; v = q.Dequeue() {
+	for q.Len() > 0 {
+		v := q.Dequeue()
 		fmt.Println(v)
 	}
 	fmt.Println("end")
 }
+```
+
+## Пример конкурентной очереди
+
+```go
+package main
+
+import (
+	aqueue "github.com/alexandrij/queue/async"
+	"fmt"
+	"sync"
+	"time"
+)
+
+func main() {
+	size := 10
+	ch := make(chan int, size)
+	defer close(ch)
+
+	aq := aqueue.New()
+	for i := 0; i < size; i++ {
+		go aq.Enqueue(i)
+	}
+	time.Sleep(time.Second)
+
+	wg := sync.WaitGroup{}
+	for aq.Len() > 0 {
+		go func() {
+			wg.Add(1)
+			if v, ok := aq.Dequeue().(int); ok == true {
+				ch <- v
+			}
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+	fmt.Println(<-ch)
+}
+
 ```
 
 ## References

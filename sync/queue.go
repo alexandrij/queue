@@ -1,6 +1,8 @@
-package queue
+package sync
 
-import "github.com/alexandrij/linkedlist"
+import (
+	"github.com/alexandrij/linkedlist"
+)
 
 type Queue struct {
 	data linkedlist.LinkedList
